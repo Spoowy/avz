@@ -4,7 +4,6 @@
 -include_lib("nitro/include/nitro.hrl").
 -include_lib("n2o/include/wf.hrl").
 -include_lib("web/include/users.hrl").
--include_lib("web/include/lang_shortcuts.hrl").
 % -include_lib("kvs/include/user.hrl").
 -compile(export_all).
 -export(?API).
@@ -21,7 +20,7 @@ registration_data(Props, email, Ori)->
 index(K) -> wf:to_binary(K).
 email_prop(Props, _) -> binary_to_list(proplists:get_value(<<"email">>, Props)).
 
-login_button() -> #button{id=login, body=?_("Sign in"), postback={email, loginemail}, source=[user,pass]}.
+login_button() -> #button{id=login, body=mws_lang:gettext("Sign in"), postback={email, loginemail}, source=[user,pass]}.
 event({email,loginemail}) -> avz:login(email, [{<<"email">>, list_to_binary(wf:q(user))}, {<<"password">>, wf:q(pass)}]);
 event(_) -> ok.
 api_event(_,_,_) -> ok.
