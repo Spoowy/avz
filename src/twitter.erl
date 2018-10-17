@@ -41,7 +41,7 @@ callback() ->
                  true -> skip  end;
          _ -> skip end.
 
-login_button() -> 
+login_button() ->
   #link{id=twlogin,body=[<<"Twitter">>],postback={twitter,logintwitter}}.
 
 sdk() -> [].
@@ -101,4 +101,3 @@ show(Props)->
                                     _-> error end;
     _ -> error
   end.
-
