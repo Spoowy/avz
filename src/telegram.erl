@@ -1,7 +1,6 @@
 -module(telegram).
 -include_lib("avz/include/avz.hrl").
 -include_lib("nitro/include/nitro.hrl").
--include_lib("mws/include/users.hrl").
 -compile(export_all).
 -export(?API).
 

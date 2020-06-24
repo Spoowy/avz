@@ -13,3 +13,57 @@
 -ifndef(AVZ_JSON).
 -define(AVZ_JSON, (application:get_env(avz,json,jsone))).
 -endif.
+
+
+
+
+-ifndef(USER_HRL).
+-define(USER_HRL, true).
+
+-include_lib("atlas/include/atlas.hrl").
+
+-ifndef(USER_EXT).
+-define(USER_EXT,
+        avatar=[],
+        company=[],
+        address=[],
+        country=[],
+        state=[],
+        city=[],
+        zip=[],
+        phone=[],
+        email=[],
+        payment_plan=[],
+        payment_vendor=[],
+        ext_id=[],
+        language=en).
+-endif.
+
+-record(user, {?ITERATOR(), 
+	       ?USER_EXT,
+               username=[],
+               password=[],
+               display_name=[],
+               register_date=[],
+               tokens = [],
+               images=[],
+               names=[],
+               surnames=[],
+               birth=[],
+               sex=[],
+               date=[],
+               status=[],
+               zone=[], % what is zone? what is type?
+               type=[] % type admin?
+              }).
+
+-record(user2, {?ITERATOR(), % version 2
+                everyting_getting_small,
+                email,
+                username,
+                password,
+                zone,
+                type }).
+
+-endif.
+

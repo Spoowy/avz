@@ -3,7 +3,6 @@
 -include_lib("avz/include/avz.hrl").
 -include_lib("nitro/include/nitro.hrl").
 -include_lib("n2o/include/n2o.hrl").
--include_lib("mws/include/users.hrl").
 
 -compile(export_all).
 -export(?API).

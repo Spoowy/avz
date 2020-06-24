@@ -4,8 +4,6 @@
 -include_lib("avz/include/avz.hrl").
 -include_lib("n2o/include/n2o.hrl").
 -include_lib("atlas/include/metainfo.hrl").
--include_lib("mws/include/users.hrl").
-% -include_lib("kvs/include/user.hrl").
 
 sha(Pass) -> crypto:hmac(wf:config(n2o,hmac,sha256),n2o_secret:secret(),wf:to_binary(Pass)).
 update({K,V},P) -> wf:setkey(K,1,case P of undefined -> []; _P -> _P end,{K,V}).
