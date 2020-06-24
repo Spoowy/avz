@@ -1,10 +1,10 @@
--module(avz).
+-module(avz). 
 -author('Maxim Sokhatsky').
 -compile(export_all).
 -include_lib("avz/include/avz.hrl").
--include_lib("n2o/include/wf.hrl").
--include_lib("apps/atlas/include/metainfo.hrl").
--include_lib("apps/web/include/users.hrl").
+-include_lib("n2o/include/n2o.hrl").
+-include_lib("atlas/include/metainfo.hrl").
+-include_lib("mws/include/users.hrl").
 % -include_lib("kvs/include/user.hrl").
 
 sha(Pass) -> crypto:hmac(wf:config(n2o,hmac,sha256),n2o_secret:secret(),wf:to_binary(Pass)).
@@ -23,7 +23,7 @@ event(logout) -> wf:user(undefined), wf:redirect(?LOGIN_PAGE);
 event(to_login) -> wf:redirect(?LOGIN_PAGE);
 event({register, #user{}=U}) -> atlas:put(U#user{id=atlas:next_id("user", 1)}), login_user(U); % sample
 event({login, #user{}=U, N}) -> Updated = merge(U,N), atlas:put(Updated), login_user(Updated); % sample
-event({error, E}) -> (?CTX#cx.module):event({login_failed, E});
+event({error, E}) -> ((get(context))#cx.module):event({login_failed, E});
 event({Method,Event}) -> Method:event({Method,Event});
 event(Ev) ->  wf:info(?MODULE,"Page Event ~p",[Ev]).
 
@@ -45,7 +45,7 @@ login(Key, Args) ->
         {_,Usr} = lists:split(Diff, UsrExt),
 
         RegData = Key:registration_data(Args, Key, list_to_tuple(lists:append([It,Usr]))),
-        (?CTX#cx.module):event({login, Exists, RegData}),
+        ((get(context))#cx.module):event({login, Exists, RegData}),
         true;
       _ -> false end end,
 
@@ -55,7 +55,7 @@ login(Key, Args) ->
 
   if (LoggedIn =:= true) -> true; true ->
     RegData = Key:registration_data(Args, Key, #user{}),
-    (?CTX#cx.module):event({register, RegData})
+    ((get(context))#cx.module):event({register, RegData})
   end.
 
 version() -> proplists:get_value(vsn,element(2,application:get_all_key(?MODULE))).
