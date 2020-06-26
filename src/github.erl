@@ -1,6 +1,7 @@
 -module(github).
 -author('Andrii Zadorozhnii').
 -include_lib("nitro/include/nitro.hrl").
+-include_lib("nitro/include/event.hrl").
 -include_lib("n2o/include/n2o.hrl").
 -include_lib("avz/include/avz.hrl").
 -compile(export_all).
@@ -72,7 +73,8 @@ email_prop(Props, github) ->
     end.
 
 login_button() -> 
-  #link{id=github_btn, body=[<<"Github">>], postback={github,logingithub} }.
+    [#link{id=github_btn, body=[<<"Sign in with Github">>]},
+     #script{body=#event{target=github_btn, type=click, postback={github,logingithub}}}].
 
 api_event(_,_,_) -> ok.
 event({github,logingithub}) -> wf:redirect(github:authorize_url()).

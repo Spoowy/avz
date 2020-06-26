@@ -2,6 +2,7 @@
 -author('Maxim Sokhatsku').
 -include_lib("avz/include/avz.hrl").
 -include_lib("nitro/include/nitro.hrl").
+-include_lib("nitro/include/event.hrl").
 -include_lib("n2o/include/n2o.hrl").
 -compile(export_all).
 -export(?API).
@@ -51,7 +52,8 @@ index(K) -> maps:get(K, ?ATTS, wf:to_binary(K)).
 email_prop(Props, _) -> proplists:get_value(maps:get(email,?ATTS), Props).
 
 login_button() -> 
-  #link{id=microsoftbtn, body=[<<"Microsoft">>],postback={microsoft, login}}.
+    [#link{id=microsoftbtn, body=[<<"Sign in with Microsoft">>]},
+     #script{body=#event{target=microsoftbtn, type=click, postback={microsoft,login}}}].
 
 get_access_token(Code) ->
   Params = [

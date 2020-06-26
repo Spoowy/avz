@@ -2,6 +2,7 @@
 -author('Andrii Zadorozhnii').
 -include_lib("avz/include/avz.hrl").
 -include_lib("nitro/include/nitro.hrl").
+-include_lib("nitro/include/event.hrl").
 -include_lib("n2o/include/n2o.hrl").
 
 -compile(export_all).
@@ -10,7 +11,7 @@
 -define(FB_APP_ID,    application:get_env(avz, fb_id,        [])).
 
 callback() -> ok.
-event({facebook,_Event}) -> wf:wire("fb_login();"), ok.
+event({facebook,_Event}) -> wf:wire("window.fb_login();"), ok. 
 api_event(fbLogin, Args, _Term) -> {JSArgs} = ?AVZ_JSON:decode(list_to_binary(Args)), avz:login(facebook, JSArgs).
 
 registration_data(Props, facebook, Ori)->
@@ -35,9 +36,10 @@ index(K) -> wf:to_binary(K).
 email_prop(Props, _) -> proplists:get_value(<<"email">>, Props).
 
 login_button() -> 
-  #link{id=loginfb, body=[<<"Facebook">>], postback={facebook,loginClick}}.
+    [#link{id=loginfb, body=[<<"Sign in with Facebook">>]},
+     #script{body=#event{target=loginfb, type=click, postback={facebook,loginClick}}}]. 
 
 sdk() ->
     wf:wire(#api{name=fbLogin, tag=fb}),
     [ #dtl{bind_script=false, file="facebook_sdk", ext="dtl", folder="priv/static/js",
-        bindings=[{appid, ?FB_APP_ID}] } ].
+	   bindings=[{appid, ?FB_APP_ID}] } ].

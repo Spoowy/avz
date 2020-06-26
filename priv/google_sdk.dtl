@@ -3,29 +3,26 @@ var m = document.createElement('meta');
 m.name = "google-signin-client_id"; m.content = "{{clientid}}";
 document.getElementsByTagName('head')[0].appendChild(m);
 
-var rf = document.createElement('link');
-rf.rel = "stypesheet"; rf.type = "text/css";
-rf.href = "https://fonts.googleapis.com/css?family=Roboto";
-document.getElementsByTagName('head')[0].appendChild(rf);
-
 window.onbeforeunload = function(e){ gapi.auth2.getAuthInstance().signOut(); }
 
-function render(){
-  gapi.signin2.render('{{loginbtnid}}', {
-    'width'     : '{{width}}',
-    'height'    : '{{height}}',
-    'longtitle' : '{{longtitle}}',
-    'theme'     : '{{theme}}',
-    // don't pass user.getAuthResponse().id_token
-    // basic profile is enough
-    'onsuccess' : function(user){ if(gLogin) gLogin(user.getBasicProfile()) },
-    'onfailure' : function(err) { if(gLoginFail) gLoginFail(err) }
-  });
-}
+function render_gapi() {console.log("gapi callback executed");}
 
 (function() {
-  var po = document.createElement('script'); po.type = 'text/javascript'; po.async = true;
-  po.src = 'https://apis.google.com/js/platform.js?onload=render';
-  var s = document.getElementsByTagName('script')[0]; s.parentNode.insertBefore(po, s);
+  var s = document.getElementsByTagName('head')[0];
+  var po = document.createElement('script'); po.type = 'text/javascript'; po.async = true; po.defer = true;
+  po.onload = function() {
+    gapi.signin2.render('{{loginbtnid}}', {
+      'width'     : '{{width}}',
+      'height'    : '{{height}}',
+      'longtitle' : '{{longtitle}}',
+      'theme'     : '{{theme}}',
+      // don't pass user.getAuthResponse().id_token
+      // basic profile is enough
+      'onsuccess' : function(user){ if(gLogin) gLogin(user.getBasicProfile()) },
+      'onfailure' : function(err) { if(gLoginFail) gLoginFail(err) }
+    });
+  }; 
+  po.src = 'https://apis.google.com/js/platform.js?onload=render_gapi';
+  s.appendChild(po);
 })();
 </script>

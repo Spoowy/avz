@@ -3,6 +3,7 @@
 -include_lib("nitro/include/nitro.hrl").
 -include_lib("n2o/include/n2o.hrl").
 -include_lib("avz/include/avz.hrl").
+-include_lib("nitro/include/event.hrl").
 
 -compile(export_all).
 -export(?API).
@@ -42,7 +43,8 @@ callback() ->
          _ -> skip end.
 
 login_button() ->
-  #link{id=twlogin,body=[<<"Twitter">>],postback={twitter,logintwitter}}.
+    [#link{id=twlogin,body=[<<"Sign in with Twitter">>]},
+     #script{body=#event{target=twlogin, type=click, postback={twitter,logintwitter}}}].
 
 sdk() -> [].
 api_event(_,_,_) -> ok.

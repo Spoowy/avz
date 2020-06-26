@@ -2,6 +2,7 @@
 -author('Andrii Zadorozhnii').
 -include_lib("avz/include/avz.hrl").
 -include_lib("nitro/include/nitro.hrl").
+-include_lib("nitro/include/event.hrl").
 -include_lib("n2o/include/n2o.hrl").
 -compile(export_all).
 -export(?API).
@@ -39,18 +40,18 @@ registration_data(Props, google, Ori)->
 index(K) -> maps:get(K, ?ATTS, K).
 email_prop(Props, _) -> proplists:get_value(maps:get(email,?ATTS), Props).
 
-login_button()-> #panel{id=?G_BTN_ID}.
+login_button()-> #panel{id=?G_BTN_ID, body=[]}.
 
 event(_) -> ok.
 callback() -> ok.
 sdk() ->
     wf:wire(#api{name=gLogin, tag=plus}),
     wf:wire(#api{name=gLoginFail, tag=plus}),
-    #dtl{bind_script=false, file="google_sdk", ext="dtl", folder="priv/static/js",
+    #dtl{bind_script=false, file="google_sdk", ext="dtl", folder="priv/static/js",   
         bindings=[{loginbtnid, ?G_BTN_ID},
           {clientid,    ?G_CLIENT_ID},
           {cookiepolicy,?G_COOKIE_POLICY}, 
           {height,      ?G_BTN_HEIGHT},
           {width,       ?G_BTN_WIDTH},
           {theme,       ?G_BTN_THEME},
-          {longtitle,   ?G_BTN_LONGTITLE} ]}.
+          {longtitle,   ?G_BTN_LONGTITLE} ]}. 
