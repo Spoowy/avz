@@ -15,9 +15,9 @@
 -define(API_URI,          "https://api.github.com").
 -define(REQ_HEADER,       [{"User-Agent", "Erlang PaaS"}]).
 
-user(Props) -> api_call("/user", Props).
+user(Props) -> D =  api_call("/user", Props).
 
-authorize_url() -> oauth:uri(?AUTHORIZE_URI, [{"client_id", ?CLIENT_ID}, {"state", "state"}]).
+authorize_url() -> oauth:uri(?AUTHORIZE_URI, [{"client_id", ?CLIENT_ID}, {"state", "state"}, {"redirect_uri", wf:config(n2o, url) ++ "/" ++ wf:config(avz, login_page)}]).
 
 get_access_token(Code) ->
     ReqParams = [{"client_id", ?CLIENT_ID}, {"client_secret", ?CLIENT_SECRET}, {"code", binary_to_list(Code)}],
@@ -35,41 +35,44 @@ api_call(Name, Props) ->
     case httpc:request(get, {oauth:uri(?API_URI++Name, Token), ?REQ_HEADER}, [], []) of
          {error, reason} -> api_error;
          {ok, {HttpResponse, _, Body}} -> 
-                case HttpResponse of {"HTTP/1.1", 200, "OK"} -> {Res} = ?AVZ_JSON:decode(list_to_binary(Body)), Res; _ -> error end;
+                case HttpResponse of {"HTTP/1.1", 200, "OK"} -> Res = ?AVZ_JSON:decode(list_to_binary(Body), [{object_format, proplist}]), Res; _ -> error end;
          {ok, _} -> api_error end.
 
 sdk() -> [].
 callback() ->
-    Code = wf:q(<<"code">>),
-    State = wf:q(<<"state">>),
-    case wf:user() of
-         undefined when Code =/= undefined andalso State == <<"state">> ->
+    Code = wf:q(code),
+    State = wf:q(state),
+    case wf:user() of [] when Code =/= [] andalso State == <<"state">> ->
             case github:get_access_token(Code) of
                  not_authorized -> skip;
-                 Props -> UserData = github:user(Props), avz:login(github, UserData) end;
+                 Props -> UserData = github:user(Props), avz:login(github, UserData) end; 
          _ -> skip end.
 
+clean_prop(null)-> [];
+clean_prop(V) -> V.
+
 registration_data(Props, github, Ori) ->
-    Id = proplists:get_value(<<"id">>, Props),
-    Name = proplists:get_value(<<"name">>, Props),
+    Id = proplists:get_value(<<"id">>, Props, undefined),
+    Name = proplists:get_value(<<"name">>, Props, <<>>),
     Email = email_prop(Props, github),
-    Ori#user{   username = binary_to_list(proplists:get_value(<<"login">>, Props)),
-                display_name = Name,
-                images = avz:update({gh_avatar,proplists:get_value(<<"avatar_url">>, Props)},Ori#user.images),
-                email = Email,
-                names  = Name,
+    Avatar = proplists:get_value(<<"avatar_url">>, Props, <<>>),
+    Ori#user{   username = binary_to_list(proplists:get_value(<<"login">>, Props, <<>>)),
+		ext_id = Id,
+                display_name = clean_prop(Name),
+                avatar = clean_prop(Avatar),
+                email = clean_prop(Email),
+                names  = [clean_prop(Name)],
                 surnames = [],
                 tokens = avz:update({github,Id},Ori#user.tokens),
-                register_date = os:timestamp(),
-                status = ok }.
+                register_date = os:timestamp()}.
 
-index(K) -> wf:to_binary(K).
+index(K) -> <<"id">>.%wf:to_binary(K).
 email_prop(Props, github) ->
-    Mail = proplists:get_value(<<"email">>, Props, undefined),
+    Mail = proplists:get_value(<<"email">>, Props, []),
     L = wf:to_list(Mail),
     case avz_validator:is_email(L) of
         true -> Mail;
-        false -> binary_to_list(proplists:get_value(<<"login">>, Props)) ++ "@github"
+        false -> binary_to_list(proplists:get_value(<<"login">>, Props, [])) ++ "@github"
     end.
 
 login_button() -> 

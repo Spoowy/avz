@@ -18,8 +18,8 @@ function render_gapi() {console.log("gapi callback executed");}
       'theme'     : '{{theme}}',
       // don't pass user.getAuthResponse().id_token
       // basic profile is enough
-      'onsuccess' : function(user){ if(gLogin) gLogin(user.getBasicProfile()) },
-      'onfailure' : function(err) { if(gLoginFail) gLoginFail(err) }
+      'onsuccess' : function(user){ if(document.gLogin) document.gLogin(user.getBasicProfile()) },
+      'onfailure' : function(err) { if(document.gLoginFail) document.gLoginFail(err) }
     });
   }; 
   po.src = 'https://apis.google.com/js/platform.js?onload=render_gapi';

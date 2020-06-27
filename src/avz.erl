@@ -19,8 +19,9 @@ buttons(Methods)   -> [ M:login_button() || M <- Methods].
 event(init) -> [];
 event(logout) -> wf:user(undefined), wf:redirect(?LOGIN_PAGE);
 event(to_login) -> wf:redirect(?LOGIN_PAGE);
-event({register, #user{}=U}) -> atlas:put(U#user{id=atlas:next_id("user", 1)}), login_user(U); % sample
-event({login, #user{}=U, N}) -> Updated = merge(U,N), atlas:put(Updated), login_user(Updated); % sample
+event({register, #user{}=U}) -> {ok,_} = users:add(U#user{id=atlas:next_id(user, 1)}), login_user(U); % sample
+event({login, #user{}=U, N}) -> %Updated = merge(U,N), ok = users:put(Updated), 
+				login_user(U); % sample
 event({error, E}) -> ((get(context))#cx.module):event({login_failed, E});
 event({Method,Event}) -> Method:event({Method,Event});
 event(Ev) ->  wf:info(?MODULE,"Page Event ~p",[Ev]).
@@ -32,19 +33,19 @@ api_event(winLogin, Args, Term)  -> microsoft:api_event(winLogin, Args, Term);
 api_event(Name, Args, Term)      -> wf:info(?MODULE,"Unknown API event: ~p ~p ~p",[Name, Args, Term]).
 
 login_user(User) -> wf:user(User), wf:redirect(?AFTER_LOGIN).
-login(_Key, [{error, E}|_Rest])-> wf:info(?MODULE,"Auth Error: ~p", [E]);
+login(_Key, [{error, E}|_Rest])-> toastr_message:error("Authentication Error."), wf:info(?MODULE,"Auth Error: ~p", [E]);
 login(Key, Args) ->
   LoginFun = fun(K) ->
     Index = proplists:get_value(Key:index(K), Args),
-    case atlas:index(user,K,Index) of
+    case atlas:index(user, K, Index) of
       [Exists|_] ->
-        Diff = tuple_size(Exists) - tuple_size(#user{}),
-        {It, UsrExt} = lists:split(tuple_size(#iterator{}), tuple_to_list(Exists)),
-        {_,Usr} = lists:split(Diff, UsrExt),
+	    Diff = tuple_size(Exists) - tuple_size(#user{}),
+	    {It, UsrExt} = lists:split(tuple_size(#iterator{}), tuple_to_list(Exists)),
+	    {_,Usr} = lists:split(Diff, UsrExt),
 
-        RegData = Key:registration_data(Args, Key, list_to_tuple(lists:append([It,Usr]))),
-        ((get(context))#cx.module):event({login, Exists, RegData}),
-        true;
+	    RegData = Key:registration_data(Args, Key, list_to_tuple(lists:append([It,Usr]))),
+	    ((get(context))#cx.module):event({login, Exists, RegData}),
+	    true;
       _ -> false end end,
 
   Keys = [K || M<-atlas:modules(),T<-(M:metainfo())#schema.tables, T#table.name==user, K<-T#table.keys],

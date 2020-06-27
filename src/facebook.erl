@@ -12,7 +12,7 @@
 
 callback() -> ok.
 event({facebook,_Event}) -> wf:wire("window.fb_login();"), ok. 
-api_event(fbLogin, Args, _Term) -> {JSArgs} = ?AVZ_JSON:decode(list_to_binary(Args)), avz:login(facebook, JSArgs).
+api_event(fbLogin, Args, _Term) -> JSArgs = ?AVZ_JSON:decode(list_to_binary(Args),[{object_format, proplist}]), avz:login(facebook, JSArgs).
 
 registration_data(Props, facebook, Ori)->
     Id = proplists:get_value(<<"id">>, Props),
@@ -23,20 +23,19 @@ registration_data(Props, facebook, Ori)->
     [UserName|_] = string:tokens(binary_to_list(Email),"@"),
     Cover = case proplists:get_value(<<"cover">>,Props) of undefined -> ""; {P} -> case proplists:get_value(<<"source">>,P) of undefined -> ""; C -> binary_to_list(C) end end,
     Ori#user{   display_name = UserName,
-                images = avz:update({fb_cover,Cover},avz:update({fb_avatar,"https://graph.facebook.com/" ++ binary_to_list(Id) ++ "/picture?type=large"},Ori#user.images)),
+                avatar = "https://graph.facebook.com/" ++ binary_to_list(Id) ++ "/picture?type=large",
                 email = Email,
-                names = proplists:get_value(<<"first_name">>, Props),
-                surnames = proplists:get_value(<<"last_name">>, Props),
+                names = [proplists:get_value(<<"first_name">>, Props, [])],
+                surnames = [proplists:get_value(<<"last_name">>, Props, [])],
                 tokens = avz:update({facebook,Id},Ori#user.tokens),
                 birth = {element(3, BirthDay), element(1, BirthDay), element(2, BirthDay)},
-                register_date = os:timestamp(),
-                status = ok }.
+                register_date = os:timestamp()}.
 
 index(K) -> wf:to_binary(K).
-email_prop(Props, _) -> proplists:get_value(<<"email">>, Props).
+email_prop(Props, _) -> proplists:get_value(<<"email">>, Props, []).
 
 login_button() -> 
-    [#link{id=loginfb, body=[<<"Sign in with Facebook">>]},
+    [#link{id=loginfb, body=[<<"Sign in with Facebook">>]}, 
      #script{body=#event{target=loginfb, type=click, postback={facebook,loginClick}}}]. 
 
 sdk() ->

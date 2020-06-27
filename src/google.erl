@@ -15,24 +15,27 @@
 -define(G_BTN_THEME,     application:get_env(avz, g_btn_theme, "light")).
 -define(G_BTN_LONGTITLE, application:get_env(avz, g_btn_longtitle, true)).
 
--define(ATTS, #{email => <<"U3">>, name => <<"ig">>, id => <<"Eea">>, image => <<"Paa">>}).
+-define(ATTS, #{email => <<"Au">>, name => <<"Bd">>, id => <<"JU">>, image => <<"MK">>}).
 
-api_event(gLogin, Args, _) -> {JSArgs} = ?AVZ_JSON:decode(list_to_binary(Args)), avz:login(google, JSArgs);
-api_event(gLoginFail, Args, _) -> wf:info(?MODULE, "Login failed ~p~n", [Args]).
+api_event(gLogin, Args, _) -> JSArgs = ?AVZ_JSON:decode(list_to_binary(Args), [{object_format, proplist}]), avz:login(google, JSArgs);
+api_event(gLoginFail, Args, _) -> toastr_message:error("Login failed."), wf:info(?MODULE, "Login failed ~p~n", [Args]).
 
 registration_data(Props, google, Ori)->
     Id = proplists:get_value(maps:get(id,?ATTS), Props),
     Name = proplists:get_value(maps:get(name, ?ATTS), Props),
     Image = proplists:get_value(maps:get(image,?ATTS), Props),
-    GivenName = proplists:get_value(<<"ofa">>, Props),
-    FamilyName = proplists:get_value(<<"wea">>, Props),
+    GivenName = proplists:get_value(<<"nW">>, Props),
+    FamilyName = proplists:get_value(<<"nU">>, Props),
     Email = email_prop(Props,google),
+    Tokens = case Ori#user.tokens of <<>> -> []; {binary, _, <<131,_/binary>> = B} -> binary_to_term(B); T1 -> T1 end,
+    Tokens1 = case Tokens of <<>> -> []; T -> T end,
+    Tokens2 = avz:update({google,Id},Tokens1),
     Ori#user{   display_name = Name,
-                images = avz:update({google_avatar,Image},Ori#user.images),
+		%avatar = Image,
                 email = Email,
-                names = GivenName,
-                surnames = FamilyName,
-                tokens = avz:update({google,Id},Ori#user.tokens),
+                names = [GivenName],
+                surnames = [FamilyName],
+                tokens = Tokens2,
                 register_date = os:timestamp(),
                 % sex = proplists:get_value(<<"gender">>, Props),
                 status = ok }.
@@ -53,5 +56,5 @@ sdk() ->
           {cookiepolicy,?G_COOKIE_POLICY}, 
           {height,      ?G_BTN_HEIGHT},
           {width,       ?G_BTN_WIDTH},
-          {theme,       ?G_BTN_THEME},
+          {theme,       ?G_BTN_THEME}, 
           {longtitle,   ?G_BTN_LONGTITLE} ]}. 

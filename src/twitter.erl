@@ -17,25 +17,24 @@ registration_data(Props, twitter, Ori)->
     Id = proplists:get_value(<<"id_str">>, Props),
     UserName = binary_to_list(proplists:get_value(<<"screen_name">>, Props)),
     Email = email_prop(Props,twitter),
-    Ori#user{   username = re:replace(UserName, "\\.", "_", [{return, list}]),
-                display_name = proplists:get_value(<<"screen_name">>, Props),
-                images = avz:update({tw_avatar,proplists:get_value(<<"profile_image_url">>, Props)},Ori#user.images),
-                names = proplists:get_value(<<"name">>, Props),
+    Ori#user{   username = re:replace(UserName, "\\.", "_", [{return, binary}]),
+                display_name = proplists:get_value(<<"screen_name">>, Props, []),
+                avatar = proplists:get_value(<<"profile_image_url">>, Props, []),
+                names = [proplists:get_value(<<"name">>, Props, [])],
                 email = Email,
                 surnames = [],
                 tokens = avz:update({twitter,Id},Ori#user.tokens),
-                register_date = os:timestamp(),
-                status = ok }.
+                register_date = os:timestamp()}.
 
 index(K) -> maps:get(K, ?ATTS, wf:to_binary(K)).
 email_prop(Props, twitter) -> proplists:get_value(maps:get(email,?ATTS), Props).
 
 callback() ->
-    Token = wf:q(<<"oauth_token">>),
-    Verifier = wf:q(<<"oauth_verifier">>),
+    Token = wf:q(oauth_token),
+    Verifier = wf:q(oauth_verifier),
     case wf:user() of
-         undefined ->
-             if (Token /= undefined) andalso ( Verifier/= undefined) ->
+	[] ->
+             if (Token /= []) andalso ( Verifier/= []) ->
                    case get_access_token(binary_to_list(Token), binary_to_list(Verifier)) of
                         not_authorized -> skip;
                         Props -> UserData = show(Props), avz:login(twitter, UserData) end;
@@ -87,10 +86,10 @@ get_access_token(Token, Verifier)->
   end.
 
 authenticate_url(RequestToken)->
-    oauth:uri("https://api.twitter.com/oauth/authenticate", [{"oauth_token", RequestToken}]).
+    oauth:uri("https://api.twitter.com/oauth/authenticate", [{"oauth_token", RequestToken}, {"callback_url", wf:config(n2o, url) ++ "/" ++ wf:config(avz, login_page)}]).
 
 authorize_url(RequestToken)->
-    oauth:uri("https://api.twitter.com/oauth/authorize", [{"oauth_token", RequestToken}]).
+    oauth:uri("https://api.twitter.com/oauth/authorize", [{"oauth_token", RequestToken}, {"callback_url", wf:config(n2o, url) ++ "/" ++ wf:config(avz, login_page)}]).
 
 show(Props)->
   URI = "https://api.twitter.com/1.1/users/show.json",
@@ -99,7 +98,7 @@ show(Props)->
                             ?CONSUMER, oauth:token(Props), oauth:token_secret(Props)),
   case Response of
     {HttpResponse, _, Body} -> case HttpResponse of
-                                    {"HTTP/1.1", 200, "OK"} ->  {Res} = ?AVZ_JSON:decode(list_to_binary(Body)), Res;
+                                    {"HTTP/1.1", 200, "OK"} ->  Res = ?AVZ_JSON:decode(list_to_binary(Body), [{object_format, proplist}]), Res;
                                     _-> error end;
     _ -> error
   end.

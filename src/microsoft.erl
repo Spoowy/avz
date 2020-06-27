@@ -31,22 +31,21 @@ api_event(_, Args, _)->
     [_|K1] = J,
     [_|K2] = lists:reverse(K1),
     K = lists:reverse(K2),
-    {D} = ?AVZ_JSON:decode(list_to_binary(K)),
+    D = ?AVZ_JSON:decode(list_to_binary(K), [{object_format, proplist}]),
     avz:login(microsoft, D).
 
 registration_data(Props, microsoft, Ori)->
-    Id = proplists:get_value(<<"id">>, Props),
-    GivenName = proplists:get_value(<<"givenName">>, Props),
-    FamilyName = proplists:get_value(<<"surname">>, Props),
+    Id = proplists:get_value(<<"id">>, Props, []),
+    GivenName = proplists:get_value(<<"givenName">>, Props, []),
+    FamilyName = proplists:get_value(<<"surname">>, Props, []),
     Email = email_prop(Props,microsoft),
-    Ori#user{   display_name = proplists:get_value(<<"displayName">>, Props),
+    Ori#user{   display_name = proplists:get_value(<<"displayName">>, Props, []),
                 email = Email,
-                names = GivenName,
-                surnames = FamilyName,
+                names = [GivenName],
+                surnames = [FamilyName],
                 tokens = avz:update({microsoft,Id},Ori#user.tokens),
                 register_date = os:timestamp(),
-                sex = proplists:get_value(<<"gender">>, Props),
-                status = ok }.
+                sex = proplists:get_value(<<"gender">>, Props, [])}.
 
 index(K) -> maps:get(K, ?ATTS, wf:to_binary(K)).
 email_prop(Props, _) -> proplists:get_value(maps:get(email,?ATTS), Props).
@@ -85,15 +84,15 @@ api_call(Name, Props) ->
 
   case httpc:request(get, Req, ?HTTP_OPTS, []) of 
     {ok, {{"HTTP/1.1",200,"OK"},Hh,Bh}} ->
-      {Usr} = ?AVZ_JSON:decode(list_to_binary(Bh)), Usr;
+      Usr = ?AVZ_JSON:decode(list_to_binary(Bh), [{object_format, proplist}]), Usr;
     {ok, {{"HTTP/1.1",_,_},_,B}} ->
-      {Err} = ?AVZ_JSON:decode(list_to_binary(B)), avz:event({error, wf:jse(Err)}), api_error;
+      Err = ?AVZ_JSON:decode(list_to_binary(B), [{object_format, proplist}]), avz:event({error, wf:jse(Err)}), api_error;
     {error, Err} -> avz:event({error, wf:jse(Err)}), api_error
   end.
 
 callback() -> 
-  Code = wf:q(<<"code">>),
-  case wf:user() of undefined when Code =/= undefined ->
+  Code = wf:q(code),
+  case wf:user() of [] when Code =/= [] ->
     case get_access_token(Code) of 
       not_authorized -> skip;
       Props -> UserData = api_call("me/", Props), avz:login(microsoft, UserData)

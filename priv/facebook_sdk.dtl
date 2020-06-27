@@ -2,9 +2,9 @@
 window.fb_login = function(){
   FB.getLoginStatus(function(response){
     if(response.status == 'connected'){
-      if(fbLogin) FB.api("/me?fields=id,first_name,last_name,email,birthday,cover", function(response){fbLogin(response);});
+      if(document.fbLogin) FB.api("/me?fields=id,first_name,last_name,email,birthday,cover", function(response){document.fbLogin(response);});
     } else FB.login(function(r){
-        if(r.authResponse && fbLogin) FB.api("/me?fields=id,first_name,last_name,email,birthday,cover", function(response){fbLogin(response);});
+        if(r.authResponse && document.fbLogin) FB.api("/me?fields=id,first_name,last_name,email,birthday,cover", function(response){document.fbLogin(response);});
       }, {scope: 'email,user_birthday'});
   });
 }
@@ -14,8 +14,8 @@ window.fbAsyncInit = function() {
 
   FB.getLoginStatus(function(response) {
     var inIframe= top!=self;
-    if(inIframe && response.status == 'connected' && fbLogin)
-      FB.api("/me?fields=id,first_name,last_name,email,birthday,cover", function(response){ fbLogin(response);});
+    if(inIframe && response.status == 'connected' && document.fbLogin)
+      FB.api("/me?fields=id,first_name,last_name,email,birthday,cover", function(response){ document.fbLogin(response);});
   });
 };
 
