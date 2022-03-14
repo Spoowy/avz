@@ -14,13 +14,12 @@
 -define(AVZ_JSON, (application:get_env(avz,json,jsone))).
 -endif.
 
-
-
-
 -ifndef(USER_HRL).
 -define(USER_HRL, true).
 
--include_lib("atlas/include/atlas.hrl").
+-include_lib("kvs/include/metainfo.hrl").
+
+-record(iterator,   { id    = []::[] | integer()} ).
 
 -ifndef(USER_EXT).
 -define(USER_EXT,
@@ -39,7 +38,7 @@
         language=en).
 -endif.
 
--record(user, {?ITERATOR(), 
+-record(user, {id=[], 
 	       ?USER_EXT,
                username=[],
                password=[],
@@ -57,7 +56,7 @@
                type=[] % type admin?
               }).
 
--record(user2, {?ITERATOR(), % version 2
+-record(user2, {id=[], % version 2
                 everyting_getting_small,
                 email,
                 username,

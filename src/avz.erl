@@ -3,7 +3,7 @@
 -compile(export_all).
 -include_lib("avz/include/avz.hrl").
 -include_lib("n2o/include/n2o.hrl").
--include_lib("atlas/include/metainfo.hrl").
+-include_lib("kvs/include/metainfo.hrl").
 
 sha(Pass) -> crypto:hmac(wf:config(n2o,hmac,sha256),n2o_secret:secret(),wf:to_binary(Pass)).
 update({K,V},P) -> wf:setkey(K,1,case P of undefined -> []; _P -> _P end,{K,V}).
@@ -19,7 +19,7 @@ buttons(Methods)   -> [ M:login_button() || M <- Methods].
 event(init) -> [];
 event(logout) -> wf:user(undefined), wf:redirect(?LOGIN_PAGE);
 event(to_login) -> wf:redirect(?LOGIN_PAGE);
-event({register, #user{}=U}) -> {ok,_} = users:add(U#user{id=atlas:next_id(user, 1)}), login_user(U); % sample
+event({register, #user{}=U}) -> {ok,_} = users:add(U#user{id=kvs:seq(user, 1)}), login_user(U); % sample
 event({login, #user{}=U, N}) -> %Updated = merge(U,N), ok = users:put(Updated), 
 				login_user(U); % sample
 event({error, E}) -> ((get(context))#cx.module):event({login_failed, E});
@@ -37,7 +37,7 @@ login(_Key, [{error, E}|_Rest])-> toastr_message:error("Authentication Error."),
 login(Key, Args) ->
   LoginFun = fun(K) ->
     Index = proplists:get_value(Key:index(K), Args),
-    case atlas:index(user, K, Index) of
+    case kvs:index(user, K, Index) of
       [Exists|_] ->
 	    Diff = tuple_size(Exists) - tuple_size(#user{}),
 	    {It, UsrExt} = lists:split(tuple_size(#iterator{}), tuple_to_list(Exists)),
@@ -48,7 +48,7 @@ login(Key, Args) ->
 	    true;
       _ -> false end end,
 
-  Keys = [K || M<-atlas:modules(),T<-(M:metainfo())#schema.tables, T#table.name==user, K<-T#table.keys],
+  Keys = [K || M<-kvs:modules(),T<-(M:metainfo())#schema.tables, T#table.name==user, K<-T#table.keys],
 
   LoggedIn = lists:any(LoginFun, Keys),
 
