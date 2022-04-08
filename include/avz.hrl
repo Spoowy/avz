@@ -17,7 +17,7 @@
 -ifndef(USER_HRL).
 -define(USER_HRL, true).
 
--include_lib("kvs/include/metainfo.hrl").
+%% -include_lib("kvs/include/metainfo.hrl").
 
 -record(iterator,   { id    = []::[] | integer()} ).
 
