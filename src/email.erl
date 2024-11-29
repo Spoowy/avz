@@ -8,9 +8,9 @@
 
 registration_data(Props, email, Ori)->
   Email = email_prop(Props, email),
-  Ori#user{ display_name = Email,
+  Ori#user{ %% display_name = Email,
             email = Email,
-            register_date = os:timestamp(),
+            register_date = erlang:localtime(),%%os:timestamp(),
             % tokens = avz:update({email,Email},Ori#user.tokens),
             status = ok,
             password = avz:sha(proplists:get_value(<<"password">>,Props))}.

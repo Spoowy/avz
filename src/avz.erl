@@ -20,7 +20,7 @@ event(init) -> [];
 event(logout) -> wf:user(undefined), wf:redirect(?LOGIN_PAGE);
 event(to_login) -> wf:redirect(?LOGIN_PAGE);
 event({register, #user{}=U}) -> {ok,_} = users:add(U#user{id=kvs:seq(user, 1)}), login_user(U); % sample
-event({login, #user{}=U, N}) -> %Updated = merge(U,N), ok = users:put(Updated), 
+event({login, #user{}=U, N}) -> %Updated = merge(U,N), ok = users:put(Updated),
 				login_user(U); % sample
 event({error, E}) -> ((get(context))#cx.module):event({login_failed, E});
 event({Method,Event}) -> Method:event({Method,Event});

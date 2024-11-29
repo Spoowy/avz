@@ -15,28 +15,33 @@
 -define(G_BTN_THEME,     application:get_env(avz, g_btn_theme, "light")).
 -define(G_BTN_LONGTITLE, application:get_env(avz, g_btn_longtitle, true)).
 
--define(ATTS, #{email => <<"Au">>, name => <<"Bd">>, id => <<"JU">>, image => <<"MK">>}).
+-define(ATTS, #{email => <<"Ny">>, name => <<"jh">>, id => <<"a8">>, image => <<"lU">>, given_name => <<"w9">>, family_name => <<"D7">>}).
 
-api_event(gLogin, Args, _) -> JSArgs = ?AVZ_JSON:decode(list_to_binary(Args), [{object_format, proplist}]), avz:login(google, JSArgs);
-api_event(gLoginFail, Args, _) -> toastr_message:error("Login failed."), wf:info(?MODULE, "Login failed ~p~n", [Args]).
+api_event(gLogin, Args, _) ->
+    JSArgs = ?AVZ_JSON:decode(list_to_binary(Args), [{object_format, proplist}]),
+    avz:login(google, JSArgs);
+api_event(gLoginFail, Args, _) ->
+    wf:info(?MODULE, "Login failed ~p~n", [Args]).
 
+%% deprecated
 registration_data(Props, google, Ori)->
     Id = proplists:get_value(maps:get(id,?ATTS), Props),
     Name = proplists:get_value(maps:get(name, ?ATTS), Props),
     Image = proplists:get_value(maps:get(image,?ATTS), Props),
-    GivenName = proplists:get_value(<<"nW">>, Props),
-    FamilyName = proplists:get_value(<<"nU">>, Props),
+    GivenName = proplists:get_value(maps:get(given_name,?ATTS), Props),
+    FamilyName = proplists:get_value(maps:get(family_name,?ATTS), Props),
     Email = email_prop(Props,google),
     Tokens = case Ori#user.tokens of <<>> -> []; {binary, _, <<131,_/binary>> = B} -> binary_to_term(B); T1 -> T1 end,
     Tokens1 = case Tokens of <<>> -> []; T -> T end,
     Tokens2 = avz:update({google,Id},Tokens1),
-    Ori#user{   display_name = Name,
-		%avatar = Image,
+    Ori#user{
+                %% display_name = Name,
+                avatar = Image,
                 email = Email,
                 names = [GivenName],
                 surnames = [FamilyName],
                 tokens = Tokens2,
-                register_date = os:timestamp(),
+                register_date = erlang:localtime(),%%os:timestamp(),
                 % sex = proplists:get_value(<<"gender">>, Props),
                 status = ok }.
 
@@ -50,7 +55,7 @@ callback() -> ok.
 sdk() ->
     wf:wire(#api{name=gLogin, tag=plus}),
     wf:wire(#api{name=gLoginFail, tag=plus}),
-    #dtl{bind_script=false, file="google_sdk", ext="dtl", folder="priv/static/js",   
+    #dtl{bind_script=false, file="google_sdk", ext="dtl", folder="priv/static/js",
         bindings=[{loginbtnid, ?G_BTN_ID},
           {clientid,    ?G_CLIENT_ID},
           {cookiepolicy,?G_COOKIE_POLICY}, 

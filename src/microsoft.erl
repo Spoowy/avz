@@ -39,13 +39,14 @@ registration_data(Props, microsoft, Ori)->
     GivenName = proplists:get_value(<<"givenName">>, Props, []),
     FamilyName = proplists:get_value(<<"surname">>, Props, []),
     Email = email_prop(Props,microsoft),
-    Ori#user{   display_name = proplists:get_value(<<"displayName">>, Props, []),
+    Ori#user{   %% display_name = proplists:get_value(<<"displayName">>, Props, []),
                 email = Email,
                 names = [GivenName],
                 surnames = [FamilyName],
                 tokens = avz:update({microsoft,Id},Ori#user.tokens),
-                register_date = os:timestamp(),
-                sex = proplists:get_value(<<"gender">>, Props, [])}.
+                register_date = erlang:localtime()%%os:timestamp(),
+                %% sex = proplists:get_value(<<"gender">>, Props, [])
+     }.
 
 index(K) -> maps:get(K, ?ATTS, wf:to_binary(K)).
 email_prop(Props, _) -> proplists:get_value(maps:get(email,?ATTS), Props).

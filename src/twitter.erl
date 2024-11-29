@@ -17,14 +17,15 @@ registration_data(Props, twitter, Ori)->
     Id = proplists:get_value(<<"id_str">>, Props),
     UserName = binary_to_list(proplists:get_value(<<"screen_name">>, Props)),
     Email = email_prop(Props,twitter),
-    Ori#user{   username = re:replace(UserName, "\\.", "_", [{return, binary}]),
-                display_name = proplists:get_value(<<"screen_name">>, Props, []),
+    Ori#user{   %%username = re:replace(UserName, "\\.", "_", [{return, binary}]),
+                %%display_name = proplists:get_value(<<"screen_name">>, Props, []),
                 avatar = proplists:get_value(<<"profile_image_url">>, Props, []),
                 names = [proplists:get_value(<<"name">>, Props, [])],
                 email = Email,
                 surnames = [],
                 tokens = avz:update({twitter,Id},Ori#user.tokens),
-                register_date = os:timestamp()}.
+                register_date = erlang:localtime()%%os:timestamp(),
+            }.
 
 index(K) -> maps:get(K, ?ATTS, wf:to_binary(K)).
 email_prop(Props, twitter) -> proplists:get_value(maps:get(email,?ATTS), Props).

@@ -20,14 +20,14 @@ registration_data(Props, telegram, Ori) ->
     Id = proplists:get_value(<<"id">>, Props),
     UserName = binary_to_list(proplists:get_value(<<"username">>, Props)),
     Email = email_prop(Props,telegram),
-    Ori#user{   username = re:replace(UserName, "\\.", "_", [{return, list}]),
-                display_name = proplists:get_value(<<"username">>, Props),
-                images = avz:update({tl_avatar,proplists:get_value(<<"photo_url">>, Props)},Ori#user.images),
+    Ori#user{   %% username = re:replace(UserName, "\\.", "_", [{return, list}]),
+                %% display_name = proplists:get_value(<<"username">>, Props),
+                avatar = avz:update({tl_avatar,proplists:get_value(<<"photo_url">>, Props)},Ori#user.avatar),
                 names = proplists:get_value(<<"first_name">>, Props),
                 email = Email,
                 surnames = proplists:get_value(<<"last_name">>, Props),
                 tokens = avz:update({telegram,Id},Ori#user.tokens),
-                register_date = os:timestamp(),
+                register_date = erlang:localtime(),%%os:timestamp(),
                 status = ok }.
 
 index(K) -> maps:get(K, ?ATTS, wf:to_binary(K)).

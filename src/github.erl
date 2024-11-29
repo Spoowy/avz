@@ -56,15 +56,16 @@ registration_data(Props, github, Ori) ->
     Name = proplists:get_value(<<"name">>, Props, <<>>),
     Email = email_prop(Props, github),
     Avatar = proplists:get_value(<<"avatar_url">>, Props, <<>>),
-    Ori#user{   username = binary_to_list(proplists:get_value(<<"login">>, Props, <<>>)),
+    Ori#user{   %%username = binary_to_list(proplists:get_value(<<"login">>, Props, <<>>)),
 		ext_id = Id,
-                display_name = clean_prop(Name),
+                %%display_name = clean_prop(Name),
                 avatar = clean_prop(Avatar),
                 email = clean_prop(Email),
                 names  = [clean_prop(Name)],
                 surnames = [],
                 tokens = avz:update({github,Id},Ori#user.tokens),
-                register_date = os:timestamp()}.
+                register_date = erlang:localtime()%%os:timestamp(),
+     }.
 
 index(K) -> <<"id">>.%wf:to_binary(K).
 email_prop(Props, github) ->

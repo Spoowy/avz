@@ -23,37 +23,27 @@
 
 -ifndef(USER_EXT).
 -define(USER_EXT,
-        avatar=[],
-        company=[],
-        address=[],
-        country=[],
-        state=[],
-        city=[],
-        zip=[],
-        phone=[],
-        email=[],
-        payment_plan=[],
-        payment_vendor=[],
-        ext_id=[],
+        avatar,
+        entities,
+        terms_agreed,
+        ext_id, % external user id
         language=en).
 -endif.
 
--record(user, {id=[], 
-	       ?USER_EXT,
-               username=[],
-               password=[],
-               display_name=[],
-               register_date=[],
-               tokens = [],
-               images=[],
-               names=[],
-               surnames=[],
-               birth=[],
-               sex=[],
-               date=[],
-               status=[],
-               zone=[], % what is zone? what is type?
-               type=[] % type admin?
+-record(user, {id,
+               prev,
+               next,
+               ?USER_EXT,
+               devices,
+               email,
+               password,
+               register_date,
+               tokens,
+               names,
+               surnames,
+               status,
+               timezone,
+               phone
               }).
 
 -record(user2, {id=[], % version 2
