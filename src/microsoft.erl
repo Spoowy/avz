@@ -82,8 +82,8 @@ api_call(Name, Props) ->
   Authorization = [{"Authorization", string:join([wf:to_list(TokenType),wf:to_list(Token)]," ") }],
   Req = {?API_URI ++ Name, Authorization},
 
-  case httpc:request(get, Req, ?HTTP_OPTS, []) of 
-    {ok, {{"HTTP/1.1",200,"OK"},Hh,Bh}} ->
+  case httpc:request(get, Req, ?HTTP_OPTS, []) of
+      {ok, {{"HTTP/1.1",200,"OK"},_Hh,Bh}} ->
       Usr = ?AVZ_JSON:decode(list_to_binary(Bh), [{object_format, proplist}]), Usr;
     {ok, {{"HTTP/1.1",_,_},_,B}} ->
       Err = ?AVZ_JSON:decode(list_to_binary(B), [{object_format, proplist}]), avz:event({error, wf:jse(Err)}), api_error;
