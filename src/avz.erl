@@ -19,7 +19,7 @@ buttons(Methods)   -> [ M:login_button() || M <- Methods].
 event(init) -> [];
 event(logout) -> wf:user(undefined), wf:redirect(?LOGIN_PAGE);
 event(to_login) -> wf:redirect(?LOGIN_PAGE);
-event({register, #user{}=U}) -> {ok,_} = users:add(U#user{id=kvs:seq(user, 1)}), login_user(U); % sample
+event({register, #user{}=U}) -> {ok,U1} = users:add(U#user{id=kvs:seq(user, 1)}), login_user(U1); % sample
 event({login, #user{}=U, N}) -> %Updated = merge(U,N), ok = users:put(Updated),
 				login_user(U); % sample
 event({error, E}) -> ((get(context))#cx.module):event({login_failed, E});
@@ -32,7 +32,7 @@ api_event(fbLogin, Args, Term)   -> facebook:api_event(fbLogin, Args, Term);
 api_event(winLogin, Args, Term)  -> microsoft:api_event(winLogin, Args, Term);
 api_event(Name, Args, Term)      -> wf:info(?MODULE,"Unknown API event: ~p ~p ~p",[Name, Args, Term]).
 
-login_user(User) -> wf:user(User), wf:redirect(?AFTER_LOGIN).
+login_user(User) -> n2o:user(User), wf:redirect(?AFTER_LOGIN).
 login(_Key, [{error, E}|_Rest])-> toastr_message:error("Authentication Error."), wf:info(?MODULE,"Auth Error: ~p", [E]);
 login(Key, Args) ->
   LoginFun = fun(K) ->
@@ -53,8 +53,8 @@ login(Key, Args) ->
   LoggedIn = lists:any(LoginFun, Keys),
 
   if (LoggedIn =:= true) -> true; true ->
-    RegData = Key:registration_data(Args, Key, #user{}),
-    ((get(context))#cx.module):event({register, RegData})
+          RegData = Key:registration_data(Args, Key, #user{}),
+          ((get(context))#cx.module):event({register, RegData})
   end.
 
 version() -> proplists:get_value(vsn,element(2,application:get_all_key(?MODULE))).
