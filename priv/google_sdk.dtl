@@ -1,28 +1,125 @@
 <script type="text/javascript">
-var m = document.createElement('meta');
-m.name = "google-signin-client_id"; m.content = "{{clientid}}";
-document.getElementsByTagName('head')[0].appendChild(m);
+// Google Identity Services implementation
+// Replace the old gapi.signin2 with the new Google Identity Services
 
-window.onbeforeunload = function(e){ gapi.auth2.getAuthInstance().signOut(); }
-
-function render_gapi() {console.log("gapi callback executed");}
-
-(function() {
-  var s = document.getElementsByTagName('head')[0];
-  var po = document.createElement('script'); po.type = 'text/javascript'; po.async = true; po.defer = true;
-  po.onload = function() {
-    gapi.signin2.render('{{loginbtnid}}', {
-      'width'     : '{{width}}',
-      'height'    : '{{height}}',
-      'longtitle' : '{{longtitle}}',
-      'theme'     : '{{theme}}',
-      // don't pass user.getAuthResponse().id_token
-      // basic profile is enough
-      'onsuccess' : function(user){ if(document.gLogin) document.gLogin(user.getBasicProfile()) },
-      'onfailure' : function(err) { if(document.gLoginFail) document.gLoginFail(err) }
+// Initialize Google Identity Services
+function initializeGoogleIdentity() {
+    google.accounts.id.initialize({
+        client_id: "{{clientid}}",
+        callback: handleCredentialResponse,
+        auto_select: false,
+        cancel_on_tap_outside: true
     });
-  }; 
-  po.src = 'https://apis.google.com/js/platform.js?onload=render_gapi';
-  s.appendChild(po);
+    
+    // Render the Sign-In button
+    google.accounts.id.renderButton(
+        document.getElementById("{{loginbtnid}}"),
+        {
+            type: "standard",
+            theme: "{{theme}}", // "outline" or "filled_blue"
+            size: "large", // "large", "medium", or "small"
+            text: "signin_with", // "signin_with", "signup_with", "continue_with", "signin"
+            shape: "rectangular", // "rectangular" or "pill"
+            logo_alignment: "left", // "left" or "center"
+            width: "{{width}}"
+        }
+    );
+    
+    // Optional: Display One Tap prompt
+    google.accounts.id.prompt();
+}
+
+// Handle the credential response (replaces the old onsuccess callback)
+function handleCredentialResponse(response) {
+    console.log("Google Identity Services callback executed");
+    
+    // The response contains a JWT ID token
+    const credential = response.credential;
+    
+    // Decode the JWT to get user information (for client-side use only)
+    const payload = parseJwt(credential);
+    
+    // Create a user object similar to the old getBasicProfile() format
+    const userProfile = {
+        getId: function() { return payload.sub; },
+        getName: function() { return payload.name; },
+        getGivenName: function() { return payload.given_name; },
+        getFamilyName: function() { return payload.family_name; },
+        getImageUrl: function() { return payload.picture; },
+        getEmail: function() { return payload.email; }
+    };
+    
+    // Call the existing gLogin function if it exists
+    if (document.gLogin) {
+        document.gLogin(userProfile);
+    }
+    
+    // Or send the JWT token directly to your backend
+    // sendTokenToBackend(credential);
+}
+
+// Handle sign-in failure
+function handleSignInFailure(error) {
+    console.error("Google sign-in failed:", error);
+    if (document.gLoginFail) {
+        document.gLoginFail(error);
+    }
+}
+
+// Utility function to parse JWT (for client-side display only)
+// WARNING: Never trust JWT validation on client-side for security decisions
+function parseJwt(token) {
+    try {
+        const base64Url = token.split('.')[1];
+        const base64 = base64Url.replace(/-/g, '+').replace(/_/g, '/');
+        const jsonPayload = decodeURIComponent(atob(base64).split('').map(function(c) {
+            return '%' + ('00' + c.charCodeAt(0).toString(16)).slice(-2);
+        }).join(''));
+        return JSON.parse(jsonPayload);
+    } catch (error) {
+        console.error("Error parsing JWT:", error);
+        return {};
+    }
+}
+
+// Send JWT token to backend for verification
+function sendTokenToBackend(credential) {
+    fetch('/api/auth/google', {
+        method: 'POST',
+        headers: {
+            'Content-Type': 'application/json',
+        },
+        body: JSON.stringify({ credential: credential })
+    })
+    .then(response => response.json())
+    .then(data => {
+        console.log('Backend verification successful:', data);
+    })
+    .catch(error => {
+        console.error('Backend verification failed:', error);
+    });
+}
+
+// Sign out function (replaces gapi.auth2.getAuthInstance().signOut())
+function signOut() {
+    google.accounts.id.disableAutoSelect();
+    // Handle your application's sign-out logic here
+    console.log('User signed out');
+}
+
+// Clean up function to replace window.onbeforeunload
+window.addEventListener('beforeunload', function(e) {
+    // Google Identity Services handles cleanup automatically
+    // No need to manually sign out like with gapi.auth2
+});
+
+// Load the Google Identity Services library and initialize
+(function() {
+    const script = document.createElement('script');
+    script.src = 'https://accounts.google.com/gsi/client';
+    script.async = true;
+    script.defer = true;
+    script.onload = initializeGoogleIdentity;
+    document.head.appendChild(script);
 })();
 </script>
