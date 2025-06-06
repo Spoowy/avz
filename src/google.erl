@@ -85,8 +85,8 @@ verify_and_decode_jwt(JWTToken) ->
                 {error, {json_decode_failed, Error}}
         end
     catch
-        _:Reason ->
-            {error, {jwt_decode_failed, Reason}}
+        _:Reason1:_ ->
+            {error, {jwt_decode_failed, Reason1}}
     end.
 
 %% Verify JWT claims (basic verification - extend as needed)
